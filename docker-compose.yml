@@ -1,0 +1,53 @@
+version: '3'
+
+volumes:
+  order-db-data:
+
+services:
+  order:
+    build:
+      context: .
+    ports:
+      - 8031:5000
+    command: 'python main.py'
+    volumes:
+      - .:/app
+#    links:
+#      - order_db
+    restart: on-failure
+    depends_on:
+      - order_db
+    networks:
+      - queue_net
+
+
+#  queue:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    restart: always
+#    command: 'python consumer.py'
+#    depends_on:
+#      - order_db
+
+
+  order_db:
+    image: mysql:5.7.22
+    hostname: 'order_db'
+    volumes:
+      - .order-db-data:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: orderms
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: root
+    restart: always
+    ports:
+      - 33065:3306
+    networks:
+      - queue_net
+
+# Attaching the microservice to the network
+networks:
+  queue_net:
+    driver: bridge
